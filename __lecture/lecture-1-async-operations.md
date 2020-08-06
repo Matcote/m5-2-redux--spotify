@@ -48,10 +48,15 @@ const App = () => {
   const dispatch = useDispatch();
 
   const handleClick = () => {
+    dispatch(startRequestingData());
     fetch("/some-data")
       .then((res) => res.json())
-      .then((data) => {})
-      .catch((err) => {});
+      .then((data) => {
+        dispatch(receiveData(data));
+      })
+      .catch((err) => {
+        dispatch(failToRetrieveData(err));
+      });
   };
 
   return <button onClick={handleClick}>Do something</button>;
@@ -85,13 +90,13 @@ const App = () => {
     fetch("/hockey")
       .then((res) => res.json())
       .then((scores) => {
-        // TODO
+        dispatch(receiveHockeyScores(scores));
       });
 
     fetch("/baseball")
       .then((res) => res.json())
       .then((scores) => {
-        // TODO
+        dispatch(receiveBaseballScores(scores));
       });
   }, []);
 
@@ -113,6 +118,7 @@ Update this example so that it dispatches an action when _both_ of the endpoints
 const receiveAllScores = () => ({
   type: "RECEIVE_ALL_SCORES",
 });
+{hockey: '', baseball: ''}
 
 const App = () => {
   const dispatch = useDispatch();
@@ -120,13 +126,18 @@ const App = () => {
   React.useEffect(() => {
     // Dispatch `receiveAllScores` after BOTH fetches have completed
 
-    fetch("/hockey").then((scores) => {
-      dispatch(receiveHockeyScores(scores));
-    });
+    const hockeyPromise = fetch("/hockey")
+      .then((res) => res.json())
+      .then((scores) => {
+        dispatch(receiveHockeyScores(scores)});
 
-    fetch("/baseball").then((scores) => {
-      dispatch(receiveBaseballScores(scores));
-    });
+    const baseballPromise = fetch("/baseball")
+    .then((res => res.json())
+    .then((scores) => {
+        dispatch(receiveBaseballScores(scores));
+      });
+
+      Promise.all([hockeyPromise, baseballPromise]).then(() => dispatch(receiveAllScores()))
   }, []);
 
   return <Scores />;
